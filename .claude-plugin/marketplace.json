@@ -1,0 +1,13 @@
+{
+  "name": "usage-battery",
+  "description": "Usage Battery: context and usage limits as coloured batteries above the Claude Code prompt.",
+  "owner": {
+    "name": "Jamie Evawin"
+  },
+  "plugins": [
+    {
+      "name": "usage-battery",
+      "source": "./"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "usage-battery",
+  "version": "0.1.0",
+  "description": "One line above the prompt: context, 5-hour and 7-day usage as coloured batteries, with time left on each limit.",
+  "author": {
+    "name": "Jamie Evawin"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/jevawin/usage-battery"
+}
