@@ -3,10 +3,11 @@
 // image script imports it too.
 
 export type Level = { minLeft: number; icon: string; text: string; color: string }
-export type Segment = { label: string; percent: number }
+// stale: a limit saved from an earlier reading, not yet confirmed this chat.
+export type Segment = { label: string; percent: number; stale?: boolean }
 // One window to draw. Context has no reset, so no resetsAt.
-export type Window = { long: string; short: string; percent: number; resetsAt?: string; now?: number; reset?: boolean }
-export type Limit = { percent: number; resetsAt?: string }
+export type Window = { long: string; short: string; percent: number; resetsAt?: string; now?: number; reset?: boolean; stale?: boolean }
+export type Limit = { percent: number; resetsAt?: string; stale?: boolean }
 
 // Measured: each colour is at least 3:1 (WCAG non-text) against #ffffff,
 // #faf9f5, #1e1e1e, #262624 and #000000.
@@ -37,8 +38,9 @@ export function levelFor(percentUsed: number): Level {
   return LEVELS.find(l => left >= l.minLeft) ?? EMPTY
 }
 
-export function batterySvg(level: Level): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${level.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${level.icon}</svg>`
+// A stale battery is drawn at half opacity: the Svg element has no opacity prop.
+export function batterySvg(level: Level, stale = false): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"${stale ? ' opacity="0.45"' : ''} fill="none" stroke="${level.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${level.icon}</svg>`
 }
 
 export function contextWindow(percent: number): Window {
@@ -49,7 +51,7 @@ export function contextWindow(percent: number): Window {
 // reported 0% and a new reset. Past its reset a window is empty until then.
 export function limitWindow(long: string, w: Limit, now: number): Window {
   const isReset = !(Date.parse(w.resetsAt ?? '') - now > 0)
-  return { long, short: long[0]!, percent: isReset ? 0 : w.percent, resetsAt: w.resetsAt ?? '', now, reset: isReset }
+  return { long, short: long[0]!, percent: isReset ? 0 : w.percent, resetsAt: w.resetsAt ?? '', now, reset: isReset, stale: w.stale }
 }
 
 // Wide to narrow: "Session (4h 55m)", "Session (4h)", "S (4h)", "4h".
@@ -62,7 +64,7 @@ const TIERS: ((w: Window) => string)[] = [
 
 // The longest layout that fits the band's width in cells.
 export function layout(windows: Window[], columns: number, batteryCells: number): Segment[] {
-  const rows = TIERS.map(tier => windows.map(w => ({ label: tier(w), percent: w.percent })))
+  const rows = TIERS.map(tier => windows.map(w => ({ label: tier(w), percent: w.percent, stale: w.stale })))
   return rows.find(row => cells(row, batteryCells) <= columns) ?? rows[rows.length - 1]!
 }
 

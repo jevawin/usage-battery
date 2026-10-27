@@ -81,3 +81,37 @@ test('the band picks the longest layout that fits', async ($, on) => {
     await ui.unmount()
   }
 })
+
+test('saved limits show dimmed until a fresh reading, which is saved', async ($, on) => {
+  const saved: unknown[] = []
+  on('session.usage', () => ({ value: { ...USAGE, rateLimits: [] } }))
+  on('store.get', () => ({
+    value: {
+      fiveHour: { percent: 6, resetsAt: '2026-10-27T16:50:00Z' },
+      sevenDay: { percent: 87, resetsAt: '2026-10-29T20:00:00Z' },
+    },
+  }))
+  on('store.set', (_, e) => (saved.push(e.value), { value: undefined }))
+  on('clock.now', () => ({ value: NOW }))
+  on('clock.every', () => ({ value: undefined }))
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('session.measure', (_, e) => ({ changed: e.changed }))
+
+  await $.session.start({ cwd: '/', surface: 'desktop', isInteractive: true })
+
+  const before = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await before.find({ type: 'Text', text: /^Session/ }))?.text).toBe('Session (4h 50m)')
+  expect((await before.find({ type: 'Text', text: /^6%$/ }))?.props.dimColor).toBe(true)
+  expect((await before.find({ type: 'Text', text: /^7%$/ }))?.props.dimColor).toBeFalsy()
+  await before.unmount()
+
+  await $.session.measure({ ...USAGE, changed: ['rateLimits'] })
+
+  const after = await $.ui.mount({ ...BAND, surface: 'terminal' })
+  expect((await after.find({ type: 'Text', text: /^6%$/ }))?.props.dimColor).toBeFalsy()
+  expect(saved.at(-1)).toEqual({
+    fiveHour: { percent: 6, resetsAt: '2026-10-27T16:50:00Z' },
+    sevenDay: { percent: 87, resetsAt: '2026-10-29T20:00:00Z' },
+  })
+  await after.unmount()
+})

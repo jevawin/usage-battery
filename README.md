@@ -57,7 +57,7 @@ It shows in new chats, in the desktop app and the terminal.
 ## Notes
 
 - **Session and Week need a Claude subscription.** On an API key there are no limits to show, so only Context appears.
-- **Limits appear after the first reply.** Claude Code learns them from its first response in a chat.
+- **Limits can lag in a new chat.** Claude Code only learns them from a reply, so a chat that's new, idle or just reloaded shows the last limits any chat saw, dimmed, until its next reply. Those can be slightly behind if you've used Claude elsewhere since.
 - **Context is a share of the whole window.** Claude Code's own "context left" notice counts towards the auto-compact point, which is lower, so the two can differ.
 - **One band per chat.** Another mod that draws above the prompt competes for the same spot.
 - The images are drawn by `scripts/readme-images.ts` from the mod's own layout code. They aren't screenshots of the app.
